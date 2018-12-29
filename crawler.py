@@ -7,6 +7,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 import time
 
 def simple_parser(url):
@@ -33,8 +34,13 @@ def js_parser(WebUrl):
         print("Timed out waiting for page to load")
         driver.quit()
         exit()
-
+    modal = driver.find_element_by_class_name("modal-content")
     matches = driver.find_elements_by_class_name('match-history-stats__row')
+    print(len(matches))
+    for i in range(5):
+        driver.execute_script('arguments[0].scrollIntoView();', matches[-1])
+        time.sleep(3)
+        matches += matches[-1].find_elements_by_xpath('following-sibling::tr')
     print(len(matches))
     for match in matches:
         try:
