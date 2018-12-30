@@ -1,4 +1,3 @@
-import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
@@ -11,23 +10,13 @@ from selenium.webdriver.common.keys import Keys
 import time, datetime
 from wait import element_has_new_scroll_height
 
-def simple_parser(url):
-    code = requests.get(url)
-    plain = code.text
-    print(plain)
-    s = BeautifulSoup(plain, "html.parser")
-    for link in s.findAll('div', {'class':'match-history-stats__row'}):
-        print('found')
 
-# simple_parser('https://www.faceit.com/en/players-modal/eXo/stats/csgo')
-
-
-def js_parser(WebUrl, min_match_date):
+def crawl_matches(WebUrl, min_match_date):
     options = Options()
     options.headless = True
     driver = webdriver.Firefox(options=options, executable_path='geckodriver.exe')
     driver.get(WebUrl)
-    timeout = 10
+    timeout = 15
     try:
         element_present = EC.presence_of_element_located((By.CLASS_NAME, 'match-history-stats__row'))
         WebDriverWait(driver, timeout).until(element_present)
@@ -43,19 +32,21 @@ def js_parser(WebUrl, min_match_date):
         scrollHeight = driver.execute_script('return arguments[0].scrollHeight', modal)
         driver.execute_script('arguments[0].scrollIntoView();', last_elem)
         try:
-            WebDriverWait(driver, 10).until(element_has_new_scroll_height((By.CLASS_NAME, 'modal-content'), scrollHeight))
+            WebDriverWait(driver, timeout).until(element_has_new_scroll_height((By.CLASS_NAME, 'modal-content'), scrollHeight))
         except TimeoutException:
             print("Timed out waiting for scrolled content to load")
-            print("The oldest match loaded was played on "+ last_match_time.strftime("%d %B %Y - %H:%M "))
+            last_date = modal.find_elements_by_class_name('match-history-stats__row')[-1].find_element_by_xpath('.//td[1]/span').text
+            print("The oldest match loaded was played on "+ last_date)
             break
         new_elems = last_elem.find_elements_by_xpath('following-sibling::tr')
         if new_elems:
             last_elem = new_elems[-1]
+        else:
+            print("No new matches found on last scroll")
         last_match_time = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
 
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     rows = soup.find_all('tr','match-history-stats__row')
-    print(len(rows))
     match_data = []
     for match_elem in rows[1:]:
         cells = match_elem.find_all('td')
@@ -72,9 +63,8 @@ def js_parser(WebUrl, min_match_date):
             'score' : score_elem.get_text(),
             'map' : map_elem.get_text()
         })
-
-    print(match_data)
     driver.quit()
+    return match_data
 
 
-js_parser('https://www.faceit.com/en/players-modal/eXo/stats/csgo', datetime.datetime(2018, 12, 1))
+print(crawl_matches('https://www.faceit.com/en/players-modal/eXo/stats/csgo', datetime.datetime(2018, 12, 1)))
