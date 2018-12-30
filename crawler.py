@@ -18,14 +18,13 @@ class Crawler:
     def get_url(self, *args):
         return self.url
 
-    def crawl_matches(self, min_match_date, url = ""):
+    def crawl_matches(self, min_match_date, timeout=15, url = ""):
         if not url:
             url = self.url
         options = Options()
-        options.headless = True
+        # options.headless = True
         driver = webdriver.Firefox(options=options, executable_path='geckodriver.exe')
         driver.get(url)
-        timeout = 15
         try:
             element_present = EC.presence_of_element_located((By.CLASS_NAME, 'match-history-stats__row'))
             WebDriverWait(driver, timeout).until(element_present)
@@ -34,13 +33,15 @@ class Crawler:
             driver.quit()
             exit()
 
+
         modal = driver.find_element_by_class_name("modal-content")
         last_elem = driver.find_elements_by_class_name('match-history-stats__row')[-1]
-        last_match_time = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
-        while last_match_time > min_match_date:
+        last_match_date = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
+        while last_match_date > min_match_date:
             scrollHeight = driver.execute_script('return arguments[0].scrollHeight', modal)
-            driver.execute_script('arguments[0].scrollIntoView();', last_elem)
+            driver.execute_script('arguments[0].scrollIntoView(true);', last_elem)
             try:
+                WebDriverWait(driver, 6).until(EC.visibility_of(last_elem))
                 WebDriverWait(driver, timeout).until(element_has_new_scroll_height((By.CLASS_NAME, 'modal-content'), scrollHeight))
             except TimeoutException:
                 print("Timed out waiting for scrolled content to load")
@@ -52,7 +53,7 @@ class Crawler:
                 last_elem = new_elems[-1]
             else:
                 print("No new matches found on last scroll")
-            last_match_time = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
+            last_match_date = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         rows = soup.find_all('tr','match-history-stats__row')
@@ -73,4 +74,4 @@ class Crawler:
                 'map' : map_elem.get_text()
             })
         driver.quit()
-        return match_data
+        return match_data[::-1]
