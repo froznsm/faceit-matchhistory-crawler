@@ -35,9 +35,9 @@ def js_parser(WebUrl, min_match_date):
         print("Timed out waiting for page to load")
         driver.quit()
         exit()
+
     modal = driver.find_element_by_class_name("modal-content")
-    match_elems = driver.find_elements_by_class_name('match-history-stats__row')
-    last_elem = match_elems[-1]
+    last_elem = driver.find_elements_by_class_name('match-history-stats__row')[-1]
     last_match_time = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
     while last_match_time > min_match_date:
         scrollHeight = driver.execute_script('return arguments[0].scrollHeight', modal)
@@ -48,28 +48,31 @@ def js_parser(WebUrl, min_match_date):
             print("Timed out waiting for scrolled content to load")
             print("The oldest match loaded was played on "+ last_match_time.strftime("%d %B %Y - %H:%M "))
             break
-        match_elems += last_elem.find_elements_by_xpath('following-sibling::tr')
-        last_elem = match_elems[-1]
+        new_elems = last_elem.find_elements_by_xpath('following-sibling::tr')
+        if new_elems:
+            last_elem = new_elems[-1]
         last_match_time = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
-    print(len(match_elems))
+
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    rows = soup.find_all('tr','match-history-stats__row')
+    print(len(rows))
     match_data = []
-    for match_elem in match_elems:
-        try:
-            date_elem = match_elem.find_element_by_xpath(".//td[1]/span")
-            date = datetime.datetime.strptime(date_elem.text+" 2018", "%d %b - %H:%M %Y")
-            if date < min_match_date:
-                continue
-            result_elem = match_elem.find_element_by_xpath(".//td[3]/div/span")
-            score_elem = match_elem.find_element_by_xpath(".//td[4]/div/span")
-            map_elem = match_elem.find_element_by_xpath(".//td[5]/div/span")
-            match_data.append({
-                'date' : date,
-                'result' : 1 if result_elem.text == "WIN" else 0,
-                'score' : score_elem.text,
-                'map' : map_elem.text
-            })
-        except NoSuchElementException:
-            continue
+    for match_elem in rows[1:]:
+        cells = match_elem.find_all('td')
+        date_elem = cells[0].find('span')
+        date = datetime.datetime.strptime(date_elem.get_text()+" 2018", "%d %b - %H:%M %Y")
+        if date < min_match_date:
+            break
+        result_elem = cells[2].find('span')
+        score_elem = cells[3].find('span')
+        map_elem = cells[4].find('span')
+        match_data.append({
+            'date' : date,
+            'result' : 1 if result_elem.get_text() == "WIN" else 0,
+            'score' : score_elem.get_text(),
+            'map' : map_elem.get_text()
+        })
+
     print(match_data)
     driver.quit()
 
