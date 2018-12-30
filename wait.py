@@ -1,5 +1,5 @@
 class element_has_new_scroll_height(object):
-  """An expectation for checking that an element has a par new scrollHeight.
+  """An expectation for checking that an element has a new scrollHeight.
 
   locator - used to find the element
   scrollHeight - old scrollHeight to be compared to

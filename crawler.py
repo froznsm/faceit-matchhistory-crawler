@@ -11,7 +11,11 @@ import time, datetime
 from wait import element_has_new_scroll_height
 
 class Crawler:
+    """A crawler using selenium and bs4 to get the match history from a faceit csgo profile
 
+    url WebUrl of the profile
+    return a list of all matches up to a specified date_elem
+    """
     def __init__(self, url):
             self.url = url
 

@@ -1,7 +1,9 @@
 import datetime
 from crawler import Crawler
 
-match_crawler = Crawler('https://www.faceit.com/en/players-modal/eXo/stats/csgo')
+player_name = !!ENTER PLAYER NAME HERE!!
+
+match_crawler = Crawler('https://www.faceit.com/en/players-modal/{}/stats/csgo'.format(player_name))
 
 
 matches = match_crawler.crawl_matches(datetime.datetime(2018, 11, 1), 10)
