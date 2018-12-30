@@ -8,8 +8,8 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-import time
-import datetime
+import time, datetime
+from wait import element_has_new_scroll_height
 
 def simple_parser(url):
     code = requests.get(url)
@@ -23,7 +23,9 @@ def simple_parser(url):
 
 
 def js_parser(WebUrl):
-    driver = webdriver.Firefox(executable_path='geckodriver.exe')
+    options = Options()
+    options.headless = True
+    driver = webdriver.Firefox(options=options, executable_path='geckodriver.exe')
     driver.get(WebUrl)
     timeout = 10
     try:
@@ -35,11 +37,15 @@ def js_parser(WebUrl):
         exit()
     modal = driver.find_element_by_class_name("modal-content")
     match_elems = driver.find_elements_by_class_name('match-history-stats__row')
-    print(len(match_elems))
     for i in range(5):
-        driver.execute_script('arguments[0].scrollIntoView();', match_elems[-1])
-        time.sleep(3)
-        match_elems += match_elems[-1].find_elements_by_xpath('following-sibling::tr')
+        last_elem = match_elems[-1]
+        scrollHeight = driver.execute_script('return arguments[0].scrollHeight', modal)
+        driver.execute_script('arguments[0].scrollIntoView();', last_elem)
+        try:
+            WebDriverWait(driver, 4).until(element_has_new_scroll_height((By.CLASS_NAME, 'modal-content'), scrollHeight))
+        except TimeoutException:
+            print("Timed out waiting for scrolled content to load")
+        match_elems += last_elem.find_elements_by_xpath('following-sibling::tr')
     print(len(match_elems))
     match_data = []
     for match_elem in match_elems:
@@ -58,7 +64,6 @@ def js_parser(WebUrl):
             continue
     print(match_data)
     driver.quit()
-
 
 
 js_parser('https://www.faceit.com/en/players-modal/eXo/stats/csgo')
