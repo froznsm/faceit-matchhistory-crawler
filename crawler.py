@@ -22,11 +22,12 @@ class Crawler:
     def get_url(self, *args):
         return self.url
 
-    def crawl_matches(self, min_match_date, timeout=15, url = ""):
+    def crawl_matches(self, min_match_date, timeout=15, url = "", headless=True):
         if not url:
             url = self.url
         options = Options()
-        # options.headless = True
+        if headless:
+            options.headless = True
         driver = webdriver.Firefox(options=options, executable_path='geckodriver.exe')
         driver.get(url)
         try:
