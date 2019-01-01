@@ -3,6 +3,12 @@ from crawler import Crawler
 
 
 def find_breaks_and_streaks(matches):
+    """Calculate the streaks of continuous playing and the breaks inbetween those streaks.
+
+    matches --  A matchdata list of dictionaries as returned by the Crawler
+    return  --  A tuple of lists, one for streaks one for breaks,
+                each consisting of 3-tuples with a structure of (start, end, duration)
+    """
     if not matches:
         print("no matches")
         return None
@@ -42,9 +48,6 @@ def find_breaks_and_streaks(matches):
 
             # reset the startdate of the next streak
             streak_start = match2['date']
-
-    longest_streak = max(streaks, key=lambda x: x[2])[2]
-    print('The longest continuous time playing was: '+str(longest_streak))
     return (streaks, breaks)
 
 
@@ -59,4 +62,7 @@ match_crawler = Crawler('https://www.faceit.com/en/players-modal/{}/stats/csgo'.
 # call the crawler with the date
 matches = match_crawler.crawl_matches(min_date, 10)
 
-find_breaks_and_streaks(matches)
+# output longest continuous time playing
+streaks, breaks = find_breaks_and_streaks(matches)
+longest_streak = max(streaks, key=lambda x: x[2])[2]
+print('The longest continuous time playing was: '+str(longest_streak))
