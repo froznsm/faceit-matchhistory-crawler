@@ -1,9 +1,10 @@
 class element_has_new_scroll_height(object):
   """An expectation for checking that an element has a new scrollHeight.
 
-  locator - used to find the element
-  scrollHeight - old scrollHeight to be compared to
-  returns the WebElement once it has a new bigger scrollHeight
+  locator       --  used to find the element
+  scrollHeight  --  old scrollHeight to be compared to
+  
+  returns       --  the WebElement once it has a new bigger scrollHeight
   """
   def __init__(self, locator, scrollHeight):
     self.locator = locator

@@ -65,4 +65,4 @@ matches = match_crawler.crawl_matches(min_date, 10)
 # output longest continuous time playing
 streaks, breaks = find_breaks_and_streaks(matches)
 longest_streak = max(streaks, key=lambda x: x[2])[2]
-print('The longest continuous time playing was: '+str(longest_streak))
+print('The longest continuous time {} played for was: '.format(player_name)+str(longest_streak))
