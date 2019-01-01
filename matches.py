@@ -37,8 +37,8 @@ def find_breaks_and_streaks(matches):
             streak_duration_string = 'Streak lasted '+str(streak_duration)
             break_string = 'Break from '+break_start.strftime('%d %b - %H:%M')+' to '+break_end.strftime('%d %b - %H:%M')
             break_duration_string = 'Break lasted '+str(break_duration)
-            print(streak_string, streak_duration_string)
-            print(break_string, break_duration_string)
+            # print(streak_string, streak_duration_string)
+            # print(break_string, break_duration_string)
 
             # append streaks and breaks to corresponding lists
             streak = (streak_start, streak_end, streak_duration)
@@ -49,6 +49,20 @@ def find_breaks_and_streaks(matches):
             # reset the startdate of the next streak
             streak_start = match2['date']
     return (streaks, breaks)
+
+def winrate(matches):
+    """Calculate the winrate of the given matches
+
+    matches --  A matchdata list of dictionaries as returned by the Crawler
+
+    return  --  A percentage
+    """
+    if not matches:
+        print('no matches')
+        return None
+
+    win_loss = [match['result'] for match in matches]
+    return sum(win_loss)/len(win_loss)
 
 
 # name of the profile to crawl
@@ -61,6 +75,9 @@ match_crawler = Crawler('https://www.faceit.com/en/players-modal/{}/stats/csgo'.
 
 # call the crawler with the date
 matches = match_crawler.crawl_matches(min_date, 10)
+
+winrate = winrate(matches)
+print('The winrate from {0:} until now was {1:.2%}'.format(matches[0]['date'].strftime("%B %d, %Y"), winrate))
 
 # output longest continuous time playing
 streaks, breaks = find_breaks_and_streaks(matches)
