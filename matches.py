@@ -66,9 +66,9 @@ def winrate(matches):
 
 
 # name of the profile to crawl
-player_name = 'eXo'
+player_name = 'smooya'
 # date from which to now matches will be in the list
-min_date = datetime.datetime(2018, 11, 1)
+min_date = datetime.datetime(2018, 1, 1)
 
 # initalise crawler with url
 match_crawler = Crawler('https://www.faceit.com/en/players-modal/{}/stats/csgo'.format(player_name))

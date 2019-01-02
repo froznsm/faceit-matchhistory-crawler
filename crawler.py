@@ -23,21 +23,20 @@ class Crawler:
         return self.url
 
 
-    def crawl_matches(self, min_match_date, timeout=15, url = "", headless=True):
+    def crawl_matches(self, min_match_date, timeout=15, headless=True, url = ""):
         """Crawls a faceit profile URL (e.g. https://www.faceit.com/en/players-modal/PLAYERNAME/stats/csgo) for the match history.
 
         min_match_date  --  Matches between now and this date will be returned.
         timeout         --  Waiting time for each loading step until a TimeoutException is thrown and handled. (default 15)
-        url             --  The Profile URL (default "")
         headless        --  Run with or without a browser window (default True)
+        url             --  The Profile URL (default "")
 
         return          --  A list of dictionaries, one per match. They contain the date, result, score and map for each match.
         """
         if not url:
             url = self.url
         options = Options()
-        if headless:
-            options.headless = True
+        options.headless = headless
 
         driver = webdriver.Firefox(options=options, executable_path='geckodriver.exe')
         driver.get(url)
@@ -60,8 +59,8 @@ class Crawler:
             scrollHeight = driver.execute_script('return arguments[0].scrollHeight', modal)
             driver.execute_script('arguments[0].scrollIntoView(true);', last_elem)
             try:
-                WebDriverWait(driver, 6).until(EC.visibility_of(last_elem))
-                WebDriverWait(driver, timeout).until(element_has_new_scroll_height((By.CLASS_NAME, 'modal-content'), scrollHeight))
+                # WebDriverWait(driver, 6).until(EC.visibility_of(last_elem))
+                WebDriverWait(driver, timeout, poll_frequency=1).until(element_has_new_scroll_height((By.CLASS_NAME, 'modal-content'), scrollHeight))
             except TimeoutException:
                 print("Timed out waiting for scrolled content to load")
                 last_date = modal.find_elements_by_class_name('match-history-stats__row')[-1].find_element_by_xpath('.//td[1]/span').text
