@@ -53,7 +53,7 @@ def find_breaks_and_streaks(matches):
 def winrate(matches):
     """Calculate the winrate of the given matches
 
-    matches --  A matchdata list of dictionaries as returned by the Crawler
+    matches --  A matchdata list of dictionaries as returned by the crawler
 
     return  --  A percentage
     """
@@ -65,10 +65,40 @@ def winrate(matches):
     return sum(win_loss)/len(win_loss)
 
 
+def maps(matches):
+    """Calculate the number of wins and losses and winrate mapwise.
+
+    matches --  A matchdata list of dictionaries as returned by the crawler
+
+    returns --  A dictionary of the maps with a 3-tuple of wins/losses/winrate for each
+    """
+    if not matches:
+        print('no matches')
+        return None
+
+    maps = {}
+    for match in matches:
+        map = match['map']
+        score = match['score']
+        result = match['result']
+        # add map to dictionary
+        if not map in maps:
+            maps[map] = {'wins': 0, 'losses': 0, 'winrate': 0.0}
+        map_data = maps[map]
+        if result:
+            map_data['wins'] += 1
+        else:
+            map_data['losses'] += 1
+        matches_played = map_data['wins'] + map_data['losses']
+
+        # compute moving average on winrate
+        map_data['winrate'] = map_data['winrate'] + (result - map_data['winrate']) / matches_played
+    return maps
+
 # name of the profile to crawl
-player_name = 'smooya'
+player_name = 'nooky'
 # date from which to now matches will be in the list
-min_date = datetime.datetime(2018, 1, 1)
+min_date = datetime.datetime(2018, 12, 1)
 
 # initalise crawler with url
 match_crawler = Crawler('https://www.faceit.com/en/players-modal/{}/stats/csgo'.format(player_name))
@@ -77,9 +107,14 @@ match_crawler = Crawler('https://www.faceit.com/en/players-modal/{}/stats/csgo'.
 matches = match_crawler.crawl_matches(min_date, 10)
 
 winrate = winrate(matches)
-print('The winrate from {0:} until now was {1:.2%}'.format(matches[0]['date'].strftime("%B %d, %Y"), winrate))
+print('{0:} played {1:} matches from {2:} until now'.format(player_name, len(matches), matches[0]['date'].strftime("%B %d, %Y")))
+print('The winrate was {:.2%}'.format(winrate))
 
 # output longest continuous time playing
 streaks, breaks = find_breaks_and_streaks(matches)
 longest_streak = max(streaks, key=lambda x: x[2])[2]
 print('The longest continuous time {} played for was: '.format(player_name)+str(longest_streak))
+
+maps = maps(matches)
+for key in maps.keys():
+    print("%s: %s" % (key, maps[key]))

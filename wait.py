@@ -3,7 +3,7 @@ class element_has_new_scroll_height(object):
 
   locator       --  used to find the element
   scrollHeight  --  old scrollHeight to be compared to
-  
+
   returns       --  the WebElement once it has a new bigger scrollHeight
   """
   def __init__(self, locator, scrollHeight):
@@ -13,7 +13,6 @@ class element_has_new_scroll_height(object):
   def __call__(self, driver):
     element = driver.find_element(*self.locator)   # Finding the referenced element
     newScrollHeight = driver.execute_script('return arguments[0].scrollHeight', element)
-    print(self.scrollHeight, newScrollHeight)
     if newScrollHeight > self.scrollHeight:
         return element
     else:

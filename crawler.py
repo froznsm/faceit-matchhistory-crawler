@@ -54,12 +54,12 @@ class Crawler:
         last_elem = driver.find_elements_by_class_name('match-history-stats__row')[-1]
         last_match_date = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
 
+        print('Page loaded, starting to scroll')
         # scroll and load until a match older than the specified min_match_date is found
         while last_match_date > min_match_date:
             scrollHeight = driver.execute_script('return arguments[0].scrollHeight', modal)
             driver.execute_script('arguments[0].scrollIntoView(true);', last_elem)
             try:
-                # WebDriverWait(driver, 6).until(EC.visibility_of(last_elem))
                 WebDriverWait(driver, timeout, poll_frequency=1).until(element_has_new_scroll_height((By.CLASS_NAME, 'modal-content'), scrollHeight))
             except TimeoutException:
                 print("Timed out waiting for scrolled content to load")
@@ -72,12 +72,12 @@ class Crawler:
                 last_elem = new_elems[-1]
             else:
                 print("No new matches found on last scroll")
-            # last match in all feasible cases in year 2018, too lazy solve this programmatically
             last_match_date = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
 
-        # the page should be rendered now and we can now parse the code with bs4 for efficiency
+        print('page rendered')
+        # the page should be rendered now, and will be parsed by bs4 for efficiency
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        driver.quit()
+        driver.quit() # after the page_source was gotten the driver can be quit
         rows = soup.find_all('tr','match-history-stats__row')
         match_data = []
         # go through the match history table (without the headrow) and append the data to the return list
@@ -88,14 +88,18 @@ class Crawler:
             if date < min_match_date:
                 break
             result_elem = cells[2].find('span')
+            result = 1 if result_elem.get_text() == "WIN" else 0
             score_elem = cells[3].find('span')
+            # sort the score so that the result of the given player is in front
+            (a, b) = tuple([int(s) for s in score_elem.get_text().split(' / ')])
+            if (a > b and not result) or (a < b and result):
+                (a, b) = (b, a)
             map_elem = cells[4].find('span')
             match_data.append({
                 'date' : date,
-                'result' : 1 if result_elem.get_text() == "WIN" else 0,
-                'score' : score_elem.get_text(),
+                'result' : result,
+                'score' : (a, b),
                 'map' : map_elem.get_text()
             })
-
         # return the list in reversed order so that the oldest match comes first
         return match_data[::-1]
