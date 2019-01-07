@@ -76,7 +76,6 @@ class Crawler:
             print('Scrolling completed, starting parsing')
         # the page should be rendered now, and will be parsed by bs4 for efficiency
         soup = BeautifulSoup(source, 'html.parser')
-        driver.quit() # after the page_source was gotten the driver can be quit
         rows = soup.find_all('tr','match-history-stats__row')
         match_data = []
         # go through the match history table (without the headrow) and append the data to the return list
