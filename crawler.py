@@ -70,11 +70,11 @@ class Crawler:
             new_elems = last_elem.find_elements_by_xpath('following-sibling::tr')
             if new_elems:
                 last_elem = new_elems[-1]
-            else:
-                print("No new matches found on last scroll")
+            # else:
+            #     print("No new matches found on last scroll")
             last_match_date = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
 
-        print('page rendered')
+        print('Scrolling completed, starting parsing')
         # the page should be rendered now, and will be parsed by bs4 for efficiency
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         driver.quit() # after the page_source was gotten the driver can be quit

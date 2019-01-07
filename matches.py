@@ -44,7 +44,7 @@ def find_breaks_and_streaks(matches):
             streak = (streak_start, streak_end, streak_duration)
             streaks.append(streak)
             breake = (break_start, break_end, break_duration)
-            breaks.append(break_duration)
+            breaks.append(breake)
 
             # reset the startdate of the next streak
             streak_start = match2['date']
@@ -96,7 +96,7 @@ def maps(matches):
     return maps
 
 # name of the profile to crawl
-player_name = 'nooky'
+player_name = 'eXo'
 # date from which to now matches will be in the list
 min_date = datetime.datetime(2018, 12, 1)
 
@@ -113,7 +113,9 @@ print('The winrate was {:.2%}'.format(winrate))
 # output longest continuous time playing
 streaks, breaks = find_breaks_and_streaks(matches)
 longest_streak = max(streaks, key=lambda x: x[2])[2]
+longest_break = max(breaks, key=lambda x: x[2])[2]
 print('The longest continuous time {} played for was: '.format(player_name)+str(longest_streak))
+print('The longest time without playing was: '+str(longest_break))
 
 maps = maps(matches)
 for key in maps.keys():
