@@ -1,6 +1,6 @@
 # Faceit Matchhistory Crawler
 
-Small program to analyse the matchhistory of a csgo profile on faceit. This project is for fun and not maintained and was primarily done to learn the usage of selenium.
+Small program to analyse the matchhistory of a csgo profile on faceit. This project is for fun and not maintained. It was primarily done to learn the usage of selenium.
 
 ### Requirements
 The geckodriver executable must be in the program path (or change the driver to whatever you want).
