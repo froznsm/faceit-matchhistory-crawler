@@ -37,46 +37,45 @@ class Crawler:
             url = self.url
         options = Options()
         options.headless = headless
-
-        driver = webdriver.Firefox(options=options, executable_path='geckodriver.exe')
-        driver.get(url)
-        try:
-            element_present = EC.presence_of_element_located((By.CLASS_NAME, 'match-history-stats__row'))
-            WebDriverWait(driver, timeout).until(element_present)
-        except TimeoutException:
-            print("Timed out waiting for page to load")
-            driver.quit()
-            exit()
-
-        # Find the element of the whole Profile window
-        modal = driver.find_element_by_class_name("modal-content")
-        # Find the last rendered match and its date
-        last_elem = driver.find_elements_by_class_name('match-history-stats__row')[-1]
-        last_match_date = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
-
-        print('Page loaded, starting to scroll')
-        # scroll and load until a match older than the specified min_match_date is found
-        while last_match_date > min_match_date:
-            scrollHeight = driver.execute_script('return arguments[0].scrollHeight', modal)
-            driver.execute_script('arguments[0].scrollIntoView(true);', last_elem)
+        with webdriver.Firefox(options=options, executable_path='geckodriver.exe') as driver:
+            driver.get(url)
             try:
-                WebDriverWait(driver, timeout, poll_frequency=1).until(element_has_new_scroll_height((By.CLASS_NAME, 'modal-content'), scrollHeight))
+                element_present = EC.presence_of_element_located((By.CLASS_NAME, 'match-history-stats__row'))
+                WebDriverWait(driver, timeout).until(element_present)
             except TimeoutException:
-                print("Timed out waiting for scrolled content to load")
-                last_date = modal.find_elements_by_class_name('match-history-stats__row')[-1].find_element_by_xpath('.//td[1]/span').text
-                print("The oldest match loaded was played on "+ last_date)
-                break
-            # check if the last scroll and load brought in new matchess
-            new_elems = last_elem.find_elements_by_xpath('following-sibling::tr')
-            if new_elems:
-                last_elem = new_elems[-1]
-            # else:
-            #     print("No new matches found on last scroll")
+                print("Timed out waiting for page to load")
+                driver.quit()
+                exit()
+
+            # Find the element of the whole Profile window
+            modal = driver.find_element_by_class_name("modal-content")
+            # Find the last rendered match and its date
+            last_elem = driver.find_elements_by_class_name('match-history-stats__row')[-1]
             last_match_date = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
 
-        print('Scrolling completed, starting parsing')
+            print('Page loaded, starting to scroll')
+            # scroll and load until a match older than the specified min_match_date is found
+            while last_match_date > min_match_date:
+                scrollHeight = driver.execute_script('return arguments[0].scrollHeight', modal)
+                driver.execute_script('arguments[0].scrollIntoView(true);', last_elem)
+                try:
+                    WebDriverWait(driver, timeout, poll_frequency=1).until(element_has_new_scroll_height((By.CLASS_NAME, 'modal-content'), scrollHeight))
+                except TimeoutException:
+                    print("Timed out waiting for scrolled content to load")
+                    last_date = modal.find_elements_by_class_name('match-history-stats__row')[-1].find_element_by_xpath('.//td[1]/span').text
+                    print("The oldest match loaded was played on "+ last_date)
+                    break
+                # check if the last scroll and load brought in new matchess
+                new_elems = last_elem.find_elements_by_xpath('following-sibling::tr')
+                if new_elems:
+                    last_elem = new_elems[-1]
+                # else:
+                #     print("No new matches found on last scroll")
+                last_match_date = datetime.datetime.strptime(last_elem.find_element_by_xpath(".//td[1]/span").text+" 2018", "%d %b - %H:%M %Y")
+            source = driver.page_source
+            print('Scrolling completed, starting parsing')
         # the page should be rendered now, and will be parsed by bs4 for efficiency
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        soup = BeautifulSoup(source, 'html.parser')
         driver.quit() # after the page_source was gotten the driver can be quit
         rows = soup.find_all('tr','match-history-stats__row')
         match_data = []
